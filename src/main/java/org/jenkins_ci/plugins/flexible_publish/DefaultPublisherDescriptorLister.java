@@ -41,8 +41,6 @@ import java.util.List;
 public class DefaultPublisherDescriptorLister implements PublisherDescriptorLister {
 
     public static final List<String> EXCLUSIONS = Arrays.asList(
-            "hudson.tasks.BuildTrigger.DescriptorImpl",
-            "hudson.plugins.parameterizedtrigger.BuildTrigger.DescriptorImpl",
             "org.jenkins_ci.plugins.flexible_publish.FlexiblePublisher.FlexiblePublisherDescriptor"
         );
 

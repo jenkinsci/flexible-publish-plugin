@@ -29,8 +29,8 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <!-- tried 1.409 to get to latest before LTS, but has mvn 3 dependency :-( -->
-        <version>1.408</version>
+        <!-- DependencyGraph is final in Jenkins < 1.425 -->
+        <version>1.425</version>
     </parent>
 
     <artifactId>flexible-publish</artifactId>
