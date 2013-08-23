@@ -27,7 +27,9 @@ package org.jenkins_ci.plugins.flexible_publish;
 import hudson.DescriptorExtensionList;
 import hudson.Extension;
 import hudson.Launcher;
-import hudson.matrix.MatrixProject;
+import hudson.matrix.MatrixAggregatable;
+import hudson.matrix.MatrixAggregator;
+import hudson.matrix.MatrixBuild;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
@@ -39,6 +41,9 @@ import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
 import net.sf.json.JSONObject;
+
+import org.jenkins_ci.plugins.run_condition.RunCondition;
+import org.jenkins_ci.plugins.run_condition.BuildStepRunner;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
@@ -49,18 +54,18 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class FlexiblePublisher extends Recorder {
+public class FlexiblePublisher extends Recorder implements MatrixAggregatable{
 
     public static final String PROMOTION_JOB_TYPE = "hudson.plugins.promoted_builds.PromotionProcess";
 
-    private ArrayList<ConditionalPublisher> publishers;
+    private List<ConditionalPublisher> publishers;
 
     @DataBoundConstructor
-    public FlexiblePublisher(final ArrayList<ConditionalPublisher> publishers) {
+    public FlexiblePublisher(final List<ConditionalPublisher> publishers) {
         this.publishers = publishers;
     }
 
-    public ArrayList<ConditionalPublisher> getPublishers() {
+    public List<ConditionalPublisher> getPublishers() {
         return publishers;
     }
 
@@ -146,9 +151,7 @@ public class FlexiblePublisher extends Recorder {
         }
 
         public boolean isApplicable(final Class<? extends AbstractProject> aClass) {
-            //@TODO enable for matrix builds - requires aggregation
-//            return FreeStyleProject.class.equals(aClass);
-            return !MatrixProject.class.equals(aClass) && !PROMOTION_JOB_TYPE.equals(aClass.getCanonicalName());
+            return !PROMOTION_JOB_TYPE.equals(aClass.getCanonicalName());
         }
 
         public Object readResolve() {
@@ -159,4 +162,74 @@ public class FlexiblePublisher extends Recorder {
 
     }
 
+    /**
+     * Return an aggregator worked for multi-configuration projects.
+     * 
+     * {@link Publisher#perform(AbstractBuild, Launcher, BuildListener)} is called
+     * for each axe combination builds.
+     * 
+     * For whole the multi-configuration project, {@link MatrixAggregator#endBuild()}
+     * is called instead.
+     * 
+     * @param build
+     * @param launcher
+     * @param listener
+     * @return
+     * @see hudson.matrix.MatrixAggregatable#createAggregator(hudson.matrix.MatrixBuild, hudson.Launcher, hudson.model.BuildListener)
+     */
+    @Override
+    public MatrixAggregator createAggregator(
+            MatrixBuild build, Launcher launcher, BuildListener listener
+    ) {
+        List<ConditionalMatrixAggregator> aggregatorList
+            = new ArrayList<ConditionalMatrixAggregator>();
+        
+        for (ConditionalPublisher cp: getPublishers()) {
+            if (!(cp.getPublisher() instanceof MatrixAggregatable)) {
+                continue;
+            }
+            
+            // First, decide whether the condition is satisfied
+            // in the parent scope.
+            RunCondition cond;
+            BuildStepRunner runner;
+            if (cp.isConfiguredAggregation()) {
+                cond = cp.getAggregationCondition();
+                runner = cp.getAggregationRunner();
+            } else {
+                cond = cp.getCondition();
+                runner = cp.getRunner();
+            }
+            
+            MarkPerformedBuilder mpb = new MarkPerformedBuilder();
+            boolean isSuccess = false;
+            try {
+                isSuccess = runner.perform(cond, mpb, build, launcher, listener);
+            } catch(Exception e) {
+                e.printStackTrace(listener.getLogger());
+            }
+            
+            if (!isSuccess || !mpb.isPerformed()) {
+                // condition is not satisfied.
+                continue;
+            }
+            
+            MatrixAggregator baseAggregator
+                = ((MatrixAggregatable)cp.getPublisher()).createAggregator(build, launcher, listener);
+            if (baseAggregator == null) {
+                continue;
+            }
+            aggregatorList.add(new ConditionalMatrixAggregator(
+                    build, launcher, listener, cp, baseAggregator
+            ));
+        }
+        
+        if (aggregatorList.isEmpty()) {
+            return null;
+        }
+        
+        return new FlexibleMatrixAggregator(
+                build, launcher, listener, aggregatorList
+        );
+    }
 }

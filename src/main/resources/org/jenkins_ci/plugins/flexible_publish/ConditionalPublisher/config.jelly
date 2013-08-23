@@ -40,6 +40,20 @@
                 default="${descriptor.defaultBuildStepRunner}"/>
     </f:entry>
     </f:advanced>
+    <j:if test="${descriptor.isMatrixProject(it)}">
+      <f:optionalBlock inline="true" field="configuredAggregation" title="${%configureForParent}" checked="${instance.configuredForMatrixParent}">
+        <f:entry>
+          <f:dropdownDescriptorSelector title="${%runConditionForParent}" field="aggregationCondition" descriptors="${descriptor.runConditions}"
+                  default="${descriptor.defaultRunCondition}"/>
+        </f:entry>
+        <f:advanced>
+        <f:entry>
+          <f:dropdownDescriptorSelector title="${%runnerForParent}" field="aggregationRunner" descriptors="${descriptor.buildStepRunners}"
+                  default="${descriptor.defaultBuildStepRunner}"/>
+        </f:entry>
+        </f:advanced>
+      </f:optionalBlock>
+    </j:if>
     <f:entry>
         <f:dropdownDescriptorSelector title="${%publisher}" field="publisher" descriptors="${descriptor.getAllowedPublishers(it)}"
                 default="${descriptor.defaultPublisher}"/>
