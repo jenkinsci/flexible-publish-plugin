@@ -43,6 +43,7 @@ import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
+import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 import org.jenkins_ci.plugins.run_condition.RunCondition;
@@ -57,12 +58,18 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import jenkins.model.Jenkins;
+
 public class FlexiblePublisher extends Recorder implements DependecyDeclarer, MatrixAggregatable{
 
     public static final String PROMOTION_JOB_TYPE = "hudson.plugins.promoted_builds.PromotionProcess";
 
     private List<ConditionalPublisher> publishers;
 
+    /**
+     * @param publishers
+     * @see FlexiblePublisherDescriptor#newInstance(StaplerRequest, JSONObject)
+     */
     @DataBoundConstructor
     public FlexiblePublisher(final List<ConditionalPublisher> publishers) {
         this.publishers = publishers;
@@ -170,6 +177,43 @@ public class FlexiblePublisher extends Recorder implements DependecyDeclarer, Ma
             return this;
         }
 
+        /**
+         * Build a new instance from parameters a user input in a configuration page.
+         * 
+         * Usually, it is done by {@link StaplerRequest#bindJSON(Class, JSONObject)}, 
+         * and {@link DataBoundConstructor} of classes of posted objects.
+         * 
+         * But we have to use {@link Descriptor#newInstance(StaplerRequest, JSONObject)}
+         * for classes without {@link DataBoundConstructor} (such as {@link hudson.tasks.Mailer})
+         * and classes with {@link Descriptor#newInstance(StaplerRequest, JSONObject)}
+         * doing different from their constructors with {@link DataBoundConstructor}
+         * (such as {@link hudson.tasks.junit.JUnitResultArchiver}).
+         * 
+         * @param req
+         * @param formData
+         * @return
+         * @throws hudson.model.Descriptor.FormException
+         * @see hudson.model.Descriptor#newInstance(org.kohsuke.stapler.StaplerRequest, net.sf.json.JSONObject)
+         * @see FlexiblePublisher#FlexiblePublisher(List)
+         */
+        @Override
+        public FlexiblePublisher newInstance(StaplerRequest req, JSONObject formData)
+                throws hudson.model.Descriptor.FormException {
+            List<ConditionalPublisher> publishers = null;
+            if (formData != null) {
+                JSONArray a = JSONArray.fromObject(formData.get("publishers"));
+                if (a != null && !a.isEmpty()) {
+                    @SuppressWarnings("unchecked")
+                    Descriptor<ConditionalPublisher> d = Jenkins.getInstance().getDescriptorOrDie(ConditionalPublisher.class);
+                    publishers = new ArrayList<ConditionalPublisher>(a.size());
+                    for(int idx = 0; idx < a.size(); ++idx) {
+                        publishers.add(d.newInstance(req, a.getJSONObject(idx)));
+                    }
+                }
+            }
+            
+            return new FlexiblePublisher(publishers);
+        }
     }
 
     @SuppressWarnings("rawtypes")

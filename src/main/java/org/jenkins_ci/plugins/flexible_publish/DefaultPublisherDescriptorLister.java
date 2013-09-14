@@ -33,7 +33,6 @@ import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Publisher;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -57,8 +56,7 @@ public class DefaultPublisherDescriptorLister implements PublisherDescriptorList
             BuildStepDescriptor<? extends Publisher> buildStepDescriptor = (BuildStepDescriptor<? extends Publisher>) descriptor;
             // would be nice to refuse if needsToRunAfterFinalized - but that's on the publisher which does not yet exist!
             if (buildStepDescriptor.isApplicable(project.getClass())) {
-                if (hasDbc(buildStepDescriptor.clazz))
-                    publishers.add(buildStepDescriptor);
+                publishers.add(buildStepDescriptor);
             }
         }
         return publishers;
@@ -66,14 +64,6 @@ public class DefaultPublisherDescriptorLister implements PublisherDescriptorList
 
     public DescriptorImpl getDescriptor() {
         return Hudson.getInstance().getDescriptorByType(DescriptorImpl.class);
-    }
-
-    private boolean hasDbc(final Class<?> clazz) {
-        for (Constructor<?> constructor : clazz.getConstructors()) {
-            if (constructor.isAnnotationPresent(DataBoundConstructor.class))
-                return true;
-        }
-        return false;
     }
 
     @Extension

@@ -24,22 +24,37 @@
 
 package org.jenkins_ci.plugins.flexible_publish;
 
+import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.util.Arrays;
 import java.util.List;
 
+import hudson.Launcher;
 import hudson.matrix.AxisList;
 import hudson.matrix.MatrixProject;
 import hudson.matrix.TextAxis;
+import hudson.model.BuildListener;
+import hudson.model.Descriptor;
 import hudson.model.Result;
+import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.FreeStyleProject;
+import hudson.model.Saveable;
 import hudson.tasks.ArtifactArchiver;
 import hudson.tasks.BuildTrigger;
+import hudson.tasks.Mailer;
+import hudson.tasks.junit.TestDataPublisher;
+import hudson.tasks.junit.TestResult;
+import hudson.tasks.junit.TestResultAction.Data;
+import hudson.tasks.junit.JUnitResultArchiver;
+import hudson.util.DescribableList;
 
 import org.jenkins_ci.plugins.run_condition.BuildStepRunner;
 import org.jenkins_ci.plugins.run_condition.core.AlwaysRun;
 import org.jenkins_ci.plugins.run_condition.core.NeverRun;
 import org.jvnet.hudson.test.HudsonTestCase;
+import org.jvnet.hudson.test.TestExtension;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 import com.gargoylesoftware.htmlunit.html.HtmlCheckBoxInput;
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
@@ -292,4 +307,92 @@ public class ConfigurationTest extends HudsonTestCase {
         assertEquals(Result.SUCCESS, trigger.getThreshold());
     }
     
+    public void testNoDataBoundConstructor() throws Exception {
+        // assert that Mailer does not have a constructor with DataBoundConstructor.
+        {
+            for(Constructor<?> c: Mailer.class.getConstructors()) {
+                assertFalse(c.isAnnotationPresent(DataBoundConstructor.class));
+            }
+        }
+        
+        FreeStyleProject p = createFreeStyleProject();
+        Mailer mailer = new Mailer();
+        mailer.recipients = "test@example.com";
+        mailer.dontNotifyEveryUnstableBuild = true;
+        mailer.sendToIndividuals = true;
+        
+        ConditionalPublisher conditionalPublisher = new ConditionalPublisher(
+                new AlwaysRun(),
+                mailer,
+                new BuildStepRunner.Run(), 
+                false,
+                null,
+                null
+        );
+        FlexiblePublisher flexiblePublisher = new FlexiblePublisher(Arrays.asList(conditionalPublisher));
+        p.getPublishersList().add(flexiblePublisher);
+        p.save();
+        
+        reconfigure(p);
+        
+        conditionalPublisher = p.getPublishersList().get(FlexiblePublisher.class).getPublishers().get(0);
+        mailer = (Mailer)conditionalPublisher.getPublisher();
+        assertEquals("test@example.com", mailer.recipients);
+        // mailer.dontNotifyEveryUnstableBuild does not restored, for it is treated in a special way.
+        // Detail: there can be multiple "mailer_notifyEveryUnstableBuild"s in a form.
+        //assertTrue(mailer.dontNotifyEveryUnstableBuild);
+        assertTrue(mailer.sendToIndividuals);
+    }
+    
+    public void testNewInstanceDifferFromDataBoundConstructor() throws Exception {
+        FreeStyleProject p = createFreeStyleProject();
+        DescribableList<TestDataPublisher, Descriptor<TestDataPublisher>> testDataPublishers
+            = new DescribableList<TestDataPublisher, Descriptor<TestDataPublisher>>(Saveable.NOOP);
+        testDataPublishers.add(new DummyTestDataPublisher());
+        JUnitResultArchiver archiver = new JUnitResultArchiver("**/*.xml", true, testDataPublishers);
+        
+        ConditionalPublisher conditionalPublisher = new ConditionalPublisher(
+                new AlwaysRun(),
+                archiver,
+                new BuildStepRunner.Run(), 
+                false,
+                null,
+                null
+        );
+        FlexiblePublisher flexiblePublisher = new FlexiblePublisher(Arrays.asList(conditionalPublisher));
+        p.getPublishersList().add(flexiblePublisher);
+        p.save();
+        
+        reconfigure(p);
+        
+        conditionalPublisher = p.getPublishersList().get(FlexiblePublisher.class).getPublishers().get(0);
+        archiver = (JUnitResultArchiver)conditionalPublisher.getPublisher();
+        assertEquals("**/*.xml", archiver.getTestResults());
+        assertTrue(archiver.isKeepLongStdio());
+        assertNotNull(archiver.getTestDataPublishers());
+        assertEquals(1, archiver.getTestDataPublishers().size());
+        assertEquals(DummyTestDataPublisher.class, archiver.getTestDataPublishers().get(0).getClass());
+    }
+    
+    public static class DummyTestDataPublisher extends TestDataPublisher {
+        @DataBoundConstructor
+        public DummyTestDataPublisher() {
+        }
+        
+        @Override
+        public Data getTestData(AbstractBuild<?, ?> build, Launcher launcher,
+                BuildListener listener, TestResult testResult)
+                throws IOException, InterruptedException {
+            return null;
+        }
+        
+        @TestExtension
+        public static class DescriptorImpl extends Descriptor<TestDataPublisher> {
+            @Override
+            public String getDisplayName() {
+                return "DummyTestDataPublisher";
+            }
+            
+        }
+    }
 }

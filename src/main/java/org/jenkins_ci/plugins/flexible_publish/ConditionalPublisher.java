@@ -39,15 +39,20 @@ import hudson.model.Descriptor;
 import hudson.model.Hudson;
 import hudson.tasks.ArtifactArchiver;
 import hudson.tasks.BuildStep;
+import net.sf.json.JSONObject;
+
 import org.jenkins_ci.plugins.run_condition.BuildStepRunner;
 import org.jenkins_ci.plugins.run_condition.RunCondition;
 import org.jenkins_ci.plugins.run_condition.core.AlwaysRun;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.StaplerRequest;
 
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+
+import jenkins.model.Jenkins;
 
 public class ConditionalPublisher implements Describable<ConditionalPublisher>, DependecyDeclarer {
 
@@ -64,6 +69,15 @@ public class ConditionalPublisher implements Describable<ConditionalPublisher>, 
         this(condition, publisher, runner, false, null, null);
     }
     
+    /**
+     * @param condition
+     * @param publisher
+     * @param runner
+     * @param configuredAggregation
+     * @param aggregationCondition
+     * @param aggregationRunner
+     * @see ConditionalPublisherDescriptor#newInstance(StaplerRequest, JSONObject)
+     */
     @DataBoundConstructor
     public ConditionalPublisher(final RunCondition condition, final BuildStep publisher, final BuildStepRunner runner,
             boolean configuredAggregation, final RunCondition aggregationCondition, final BuildStepRunner aggregationRunner) {
@@ -163,6 +177,95 @@ public class ConditionalPublisher implements Describable<ConditionalPublisher>, 
 
         public boolean isMatrixProject(Object it) {
             return (it instanceof MatrixProject);
+        }
+
+        /**
+         * Build a new instance from parameters a user input in a configuration page.
+         * 
+         * Usually, it is done by {@link StaplerRequest#bindJSON(Class, JSONObject)}, 
+         * and {@link DataBoundConstructor} of classes of posted objects.
+         * 
+         * But we have to use {@link Descriptor#newInstance(StaplerRequest, JSONObject)}
+         * for classes without {@link DataBoundConstructor} (such as {@link hudson.tasks.Mailer})
+         * and classes with {@link Descriptor#newInstance(StaplerRequest, JSONObject)}
+         * doing different from their constructors with {@link DataBoundConstructor}
+         * (such as {@link hudson.tasks.junit.JUnitResultArchiver}).
+         * 
+         * @param req
+         * @param formData
+         * @return
+         * @throws hudson.model.Descriptor.FormException
+         * @see hudson.model.Descriptor#newInstance(org.kohsuke.stapler.StaplerRequest, net.sf.json.JSONObject)
+         * @see ConditionalPublisher#ConditionalPublisher(RunCondition, BuildStep, BuildStepRunner, boolean, RunCondition, BuildStepRunner)
+         */
+        @Override
+        public ConditionalPublisher newInstance(StaplerRequest req, JSONObject formData)
+                throws hudson.model.Descriptor.FormException {
+            RunCondition condition = null;
+            BuildStepRunner runner = null;
+            BuildStep publisher = null;
+            boolean configuredAggregation = false;
+            RunCondition aggregationCondition = null;
+            BuildStepRunner aggregationRunner = null;
+            
+            if (formData != null) {
+                condition = req.bindJSON(RunCondition.class, formData.getJSONObject("condition"));
+                runner = req.bindJSON(BuildStepRunner.class, formData.getJSONObject("runner"));
+                if (formData.has("configuredAggregation")) {
+                    configuredAggregation = formData.getBoolean("configuredAggregation");
+                    aggregationCondition = req.bindJSON(RunCondition.class, formData.getJSONObject("aggregationCondition"));
+                    aggregationRunner = req.bindJSON(BuildStepRunner.class, formData.getJSONObject("aggregationRunner"));
+                }
+                
+                publisher = bindJSONWithDescriptor(req, formData, "publisher");
+            }
+            return new ConditionalPublisher(
+                    condition,
+                    publisher,
+                    runner,
+                    configuredAggregation,
+                    aggregationCondition,
+                    aggregationRunner
+            );
+        }
+
+        /**
+         * Construct an object from parameters input by a user.
+         * 
+         * Not using {@link DataBoundConstructor},
+         * but using {@link Descriptor#newInstance(StaplerRequest, JSONObject)}.
+         * 
+         * @param req
+         * @param formData
+         * @param fieldName
+         * @return
+         * @throws hudson.model.Descriptor.FormException
+         */
+        private BuildStep bindJSONWithDescriptor(StaplerRequest req, JSONObject formData, String fieldName)
+                throws hudson.model.Descriptor.FormException {
+            formData = formData.getJSONObject(fieldName);
+            if (formData == null || formData.isNullObject()) {
+                return null;
+            }
+            if (!formData.has("stapler-class")) {
+                throw new FormException("No stapler-class is specified", fieldName);
+            }
+            String clazzName = formData.getString("stapler-class");
+            if (clazzName == null) {
+                throw new FormException("No stapler-class is specified", fieldName);
+            }
+            try {
+                @SuppressWarnings("unchecked")
+                Class<? extends Describable<?>> clazz = (Class<? extends Describable<?>>)Jenkins.getInstance().getPluginManager().uberClassLoader.loadClass(clazzName);
+                Descriptor<?> d = Jenkins.getInstance().getDescriptorOrDie(clazz);
+                return (BuildStep)d.newInstance(req, formData);
+            } catch(ClassNotFoundException e) {
+                throw new FormException(
+                        String.format("Failed to instantiate %s", clazz),
+                        e,
+                        fieldName
+                );
+            }
         }
     }
 
