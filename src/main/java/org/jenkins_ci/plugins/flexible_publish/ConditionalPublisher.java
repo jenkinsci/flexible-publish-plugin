@@ -183,10 +183,19 @@ public class ConditionalPublisher implements Describable<ConditionalPublisher>, 
                                                                                                 throws InterruptedException, IOException {
         for (BuildStep publisher: getPublisherList()) {
             if (!runner.perform(condition, publisher, build, launcher, listener)) {
+                listener.getLogger().println("[flexible-publish] Publisher \"" + getBuildStepName(publisher) + "\" failed");
                 return false;
             }
         }
         return true;
+    }
+
+    private static String getBuildStepName(BuildStep s) {
+        if (s instanceof Describable) {
+            return String.format("%s (%s)", ((Describable<?>)s).getDescriptor().getDisplayName(), s.toString());
+        } else {
+            return s.toString();
+        }
     }
 
     public Object readResolve() {
