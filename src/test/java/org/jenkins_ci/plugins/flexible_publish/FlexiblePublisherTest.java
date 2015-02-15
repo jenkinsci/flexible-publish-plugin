@@ -277,7 +277,7 @@ public class FlexiblePublisherTest extends HudsonTestCase {
             p.getPublishersList().add(new ArtifactArchiver("**/*", "", false));
             
             FreeStyleBuild b = p.scheduleBuild2(0).get();
-            assertBuildStatus(Result.FAILURE, b);
+            assertBuildStatus(Result.SUCCESS, b);
             
             // ArtifactArchiver is executed even prior publisher fails.
             assertTrue(new File(b.getArtifactsDir(), "artifact.txt").exists());
