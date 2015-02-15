@@ -112,10 +112,11 @@ public class FlexiblePublisher extends Recorder implements DependecyDeclarer, Ma
     @Override
     public boolean perform(final AbstractBuild<?, ?> build, final Launcher launcher, final BuildListener listener)
                                                                                                 throws InterruptedException, IOException {
+        boolean wholeResult = true;
         for (ConditionalPublisher publisher : publishers)
             if (!publisher.perform(build, launcher, listener))
-                setResult(build, Result.FAILURE);
-        return true;
+                wholeResult = false;
+        return wholeResult;
     }
 
     private static void setResult(final AbstractBuild<?, ?> build, final Result result) {

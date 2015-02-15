@@ -35,6 +35,7 @@ import hudson.model.BuildListener;
 import hudson.model.DependecyDeclarer;
 import hudson.model.DependencyGraph;
 import hudson.model.Describable;
+import hudson.model.Result;
 import hudson.model.Descriptor;
 import hudson.model.Hudson;
 import hudson.model.Saveable;
@@ -177,14 +178,32 @@ public class ConditionalPublisher implements Describable<ConditionalPublisher>, 
         return true;
     }
 
+    private static String getBuildStepName(BuildStep s) {
+        if (s instanceof Describable) {
+            return String.format("%s (%s)", ((Describable<?>)s).getDescriptor().getDisplayName(), s.toString());
+        } else {
+            return s.toString();
+        }
+    }
+
     public boolean perform(final AbstractBuild<?, ?> build, final Launcher launcher, final BuildListener listener)
                                                                                                 throws InterruptedException, IOException {
+        // do as AbstractBuild.AbstractRunner#performAllBuildSteps
+        boolean wholeResult = true;
         for (BuildStep publisher: getPublisherList()) {
-            if (!runner.perform(condition, publisher, build, launcher, listener)) {
-                return false;
+            try {
+                if (!runner.perform(condition, publisher, build, launcher, listener)) {
+                    listener.error(String.format("[flexible-publish] %s failed", getBuildStepName(publisher)));
+                    build.setResult(Result.FAILURE);
+                    wholeResult = false;
+                }
+            } catch (Exception e) {
+                e.printStackTrace(listener.error(String.format("[flexible-publish] %s aborted due to exception", getBuildStepName(publisher))));
+                build.setResult(Result.FAILURE);
+                wholeResult = false;
             }
         }
-        return true;
+        return wholeResult;
     }
 
     public Object readResolve() {
