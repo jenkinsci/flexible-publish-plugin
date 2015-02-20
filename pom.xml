@@ -29,8 +29,7 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <!-- DependencyGraph is final in Jenkins < 1.425 -->
-        <version>1.425</version>
+        <version>1.532.3</version>
     </parent>
 
     <artifactId>flexible-publish</artifactId>
