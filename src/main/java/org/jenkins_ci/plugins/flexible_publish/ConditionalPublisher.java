@@ -111,7 +111,9 @@ public class ConditionalPublisher implements Describable<ConditionalPublisher>, 
     public ConditionalPublisher(final RunCondition condition, final List<BuildStep> publisherList, final BuildStepRunner runner,
             boolean configuredAggregation, final RunCondition aggregationCondition, final BuildStepRunner aggregationRunner) {
         this.condition = condition;
-        this.publisherList = publisherList;
+        ArrayList<BuildStep> buildSteps = new ArrayList<BuildStep>(publisherList);
+        buildSteps.removeAll(Collections.<BuildStep>singleton(null)); // don't store nulls
+        this.publisherList = buildSteps;
         this.runner = runner;
         if (configuredAggregation) {
             this.aggregationCondition = aggregationCondition;
@@ -181,10 +183,19 @@ public class ConditionalPublisher implements Describable<ConditionalPublisher>, 
                                                                                                 throws InterruptedException, IOException {
         for (BuildStep publisher: getPublisherList()) {
             if (!runner.perform(condition, publisher, build, launcher, listener)) {
+                listener.getLogger().println("[flexible-publish] Publisher \"" + getBuildStepName(publisher) + "\" failed");
                 return false;
             }
         }
         return true;
+    }
+
+    private static String getBuildStepName(BuildStep s) {
+        if (s instanceof Describable) {
+            return String.format("%s (%s)", ((Describable<?>)s).getDescriptor().getDisplayName(), s.toString());
+        } else {
+            return s.toString();
+        }
     }
 
     public Object readResolve() {

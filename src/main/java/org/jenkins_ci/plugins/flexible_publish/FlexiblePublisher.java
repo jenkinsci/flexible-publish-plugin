@@ -24,6 +24,7 @@
 
 package org.jenkins_ci.plugins.flexible_publish;
 
+import hudson.AbortException;
 import hudson.DescriptorExtensionList;
 import hudson.Extension;
 import hudson.Launcher;
@@ -111,10 +112,18 @@ public class FlexiblePublisher extends Recorder implements DependecyDeclarer, Ma
 
     @Override
     public boolean perform(final AbstractBuild<?, ?> build, final Launcher launcher, final BuildListener listener)
-                                                                                                throws InterruptedException, IOException {
-        for (ConditionalPublisher publisher : publishers)
-            if (!publisher.perform(build, launcher, listener))
+            throws InterruptedException, IOException {
+        for (ConditionalPublisher publisher : publishers) {
+            try {
+                if (!publisher.perform(build, launcher, listener)) {
+                    setResult(build, Result.FAILURE);
+                    listener.getLogger().println("[flexible-publish] ConditionalPublisher set build result to FAILURE.");
+                }
+            } catch (AbortException ex){
                 setResult(build, Result.FAILURE);
+                listener.getLogger().println("[flexible-publish] ConditionalPublisher set build result to FAILURE: " + ex.getMessage());
+            }
+        }
         return true;
     }
 
