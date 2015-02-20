@@ -111,7 +111,9 @@ public class ConditionalPublisher implements Describable<ConditionalPublisher>, 
     public ConditionalPublisher(final RunCondition condition, final List<BuildStep> publisherList, final BuildStepRunner runner,
             boolean configuredAggregation, final RunCondition aggregationCondition, final BuildStepRunner aggregationRunner) {
         this.condition = condition;
-        this.publisherList = publisherList;
+        ArrayList<BuildStep> buildSteps = new ArrayList<BuildStep>(publisherList);
+        buildSteps.removeAll(Collections.<BuildStep>singleton(null)); // don't store nulls
+        this.publisherList = buildSteps;
         this.runner = runner;
         if (configuredAggregation) {
             this.aggregationCondition = aggregationCondition;
