@@ -222,7 +222,7 @@ public class FlexiblePublisher extends Recorder implements DependecyDeclarer, Ma
          * and {@link DataBoundConstructor} of classes of posted objects.
          * 
          * But we have to use {@link Descriptor#newInstance(StaplerRequest, JSONObject)}
-         * for classes without {@link DataBoundConstructor} (such as {@link hudson.tasks.Mailer})
+         * for classes without {@link DataBoundConstructor} (such as {@code hudson.tasks.Mailer})
          * and classes with {@link Descriptor#newInstance(StaplerRequest, JSONObject)}
          * doing different from their constructors with {@link DataBoundConstructor}
          * (such as {@link hudson.tasks.junit.JUnitResultArchiver}).

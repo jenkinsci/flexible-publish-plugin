@@ -41,6 +41,7 @@ import hudson.matrix.MatrixProject;
 import hudson.matrix.TextAxis;
 import hudson.model.BuildListener;
 import hudson.model.FreeStyleBuild;
+import hudson.model.Hudson;
 import hudson.model.Result;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
@@ -987,5 +988,9 @@ public class MatrixAggregationTest extends HudsonTestCase {
             assertBuildStatusSuccess(r);
             assertNull(r.getArtifactsDir().list());
         }
+    }
+
+    private MatrixProject createMatrixProject() throws IOException {
+        return jenkins.createProject(MatrixProject.class, createUniqueProjectName());
     }
 }

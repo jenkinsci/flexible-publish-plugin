@@ -35,8 +35,6 @@ import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 
 /**
- * Used with {@link BuildStepRunner}.
- * 
  * Stores whether perform is executed.
  */
 public class MarkPerformedBuilder extends Builder {
