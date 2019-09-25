@@ -50,8 +50,6 @@ import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Builder;
 
 /**
- * Used with {@link BuildStepRunner}.
- * 
  * Run build steps, but stops execution immediately when any of them fail.
  */
 public class FailFastBuilder extends Builder {

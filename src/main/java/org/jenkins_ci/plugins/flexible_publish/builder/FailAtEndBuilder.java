@@ -50,8 +50,6 @@ import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Builder;
 
 /**
- * Used with {@link BuildStepRunner}.
- * 
  * Run all build steps.
  */
 public class FailAtEndBuilder extends Builder {
