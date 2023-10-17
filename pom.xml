@@ -95,6 +95,12 @@
             <version>2.0.9</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.jenkins-ci.main</groupId>
+            <artifactId>jenkins-test-harness-htmlunit</artifactId>
+            <version>154.v973ee207a_b_95</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <scm>
