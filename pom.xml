@@ -36,7 +36,6 @@
     <packaging>hpi</packaging>
     <name>Flexible Publish Plugin</name>
     <version>0.17-SNAPSHOT</version>
-    <description>Choose the order of publisher execution and make the execution conditional</description>
     <url>https://github.com/jenkinsci/flexible-publish-plugin</url>
 
     <properties>
