@@ -67,14 +67,14 @@ import org.jvnet.hudson.test.TestExtension;
 import org.jvnet.hudson.test.recipes.LocalData;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import com.gargoylesoftware.htmlunit.html.HtmlCheckBoxInput;
-import com.gargoylesoftware.htmlunit.html.HtmlForm;
-import com.gargoylesoftware.htmlunit.html.HtmlInput;
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import org.htmlunit.html.HtmlCheckBoxInput;
+import org.htmlunit.html.HtmlForm;
+import org.htmlunit.html.HtmlInput;
+import org.htmlunit.html.HtmlPage;
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 
-import static com.gargoylesoftware.htmlunit.html.HtmlFormUtil.submit;
+import static org.htmlunit.html.HtmlFormUtil.submit;
 import static org.junit.Assert.*;
 
 /**
