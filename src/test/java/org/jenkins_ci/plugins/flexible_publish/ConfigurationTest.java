@@ -52,10 +52,6 @@ import hudson.tasks.junit.TestResultAction.Data;
 import hudson.tasks.junit.JUnitResultArchiver;
 import hudson.util.DescribableList;
 
-import org.htmlunit.html.HtmlCheckBoxInput;
-import org.htmlunit.html.HtmlForm;
-import org.htmlunit.html.HtmlInput;
-import org.htmlunit.html.HtmlPage;
 import org.jenkins_ci.plugins.flexible_publish.strategy.FailAtEndExecutionStrategy;
 import org.jenkins_ci.plugins.flexible_publish.strategy.FailFastExecutionStrategy;
 import org.jenkins_ci.plugins.run_condition.BuildStepRunner;
@@ -71,6 +67,10 @@ import org.jvnet.hudson.test.TestExtension;
 import org.jvnet.hudson.test.recipes.LocalData;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+import org.htmlunit.html.HtmlCheckBoxInput;
+import org.htmlunit.html.HtmlForm;
+import org.htmlunit.html.HtmlInput;
+import org.htmlunit.html.HtmlPage;
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 
