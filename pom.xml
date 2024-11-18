@@ -39,7 +39,7 @@
     <url>https://github.com/jenkinsci/flexible-publish-plugin</url>
 
     <properties>
-        <jenkins.version>2.361.4</jenkins.version>
+        <jenkins.version>2.387.3</jenkins.version>
         <hpi.compatibleSinceVersion>0.15</hpi.compatibleSinceVersion>
     </properties>
     
@@ -66,10 +66,10 @@
         <dependencies>
             <dependency>
                 <groupId>io.jenkins.tools.bom</groupId>
-                <artifactId>bom-2.361.x</artifactId>
-                <version>2102.v854b_fec19c92</version>
-                <type>pom</type>
+                <artifactId>bom-2.387.x</artifactId>
+                <version>2143.ve4c3c9ec790a</version>
                 <scope>import</scope>
+                <type>pom</type>
             </dependency>
         </dependencies>
     </dependencyManagement>
