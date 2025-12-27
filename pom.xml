@@ -50,18 +50,6 @@
         </license>
     </licenses>
 
-    <developers>
-        <developer>
-            <id>bap</id>
-            <name>Bap</name>
-            <email>bap-jenkins@BapIT.co.uk</email>
-        </developer>
-        <developer>
-          <id>ikedam</id>
-          <name>IKEDA Yasuyuki</name>
-        </developer>
-    </developers>
-
     <dependencyManagement>
         <dependencies>
             <dependency>
