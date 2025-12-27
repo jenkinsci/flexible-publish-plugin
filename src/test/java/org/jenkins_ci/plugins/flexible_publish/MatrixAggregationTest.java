@@ -64,7 +64,7 @@ import org.jenkins_ci.plugins.flexible_publish.testutils.FileWriteBuilder;
 import org.jenkins_ci.plugins.run_condition.BuildStepRunner;
 import org.jenkins_ci.plugins.run_condition.core.AlwaysRun;
 import org.jenkins_ci.plugins.run_condition.core.StringsMatchCondition;
-import org.jvnet.hudson.test.Bug;
+import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.HudsonTestCase;
 
 /**
@@ -959,7 +959,7 @@ public class MatrixAggregationTest extends HudsonTestCase {
         }
     }
     
-    @Bug(28585)
+    @Issue("JENKINS-28585")
     public void testOnlyNonaggregateble() throws Exception {
         MatrixProject p = createMatrixProject();
         AxisList axisList = new AxisList(new TextAxis("axis1", "value1", "value2"));
