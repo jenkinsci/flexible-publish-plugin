@@ -165,6 +165,7 @@ public class FailAtEndBuilder extends Builder {
      * @see hudson.tasks.BuildStep#getProjectAction(hudson.model.AbstractProject)
      */
     @Override
+    @Deprecated
     public Action getProjectAction(AbstractProject<?, ?> project) {
         throw new UnsupportedOperationException();
     }
