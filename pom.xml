@@ -39,10 +39,11 @@
     <url>https://github.com/jenkinsci/flexible-publish-plugin</url>
 
     <properties>
-        <jenkins.version>2.387.3</jenkins.version>
+        <jenkins.baseline>2.504</jenkins.baseline>
+        <jenkins.version>${jenkins.baseline}.3</jenkins.version>
         <hpi.compatibleSinceVersion>0.15</hpi.compatibleSinceVersion>
     </properties>
-    
+
     <licenses>
         <license>
             <name>The MIT license</name>
@@ -54,8 +55,8 @@
         <dependencies>
             <dependency>
                 <groupId>io.jenkins.tools.bom</groupId>
-                <artifactId>bom-2.387.x</artifactId>
-                <version>2143.ve4c3c9ec790a</version>
+                <artifactId>bom-${jenkins.baseline}.x</artifactId>
+                <version>5804.v80587a_38d937</version>
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
@@ -75,7 +76,6 @@
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>run-condition</artifactId>
-            <version>1.5</version>
         </dependency>
     </dependencies>
 
