@@ -30,7 +30,6 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.commons.lang.StringUtils;
 import org.jenkins_ci.plugins.flexible_publish.FlexiblePublisher;
 
 import com.google.common.base.Function;
@@ -139,7 +138,7 @@ public class FailFastBuilder extends Builder {
         return new Descriptor<Builder>() {
             @Override
             public String getDisplayName() {
-                return String.format("[%s]", StringUtils.join(
+                return String.format("[%s]", String.join(", ",
                         Lists.transform(
                                 buildsteps,
                                 new Function<BuildStep, String>() {
@@ -151,8 +150,7 @@ public class FailFastBuilder extends Builder {
                                         return input.getClass().getName();
                                     }
                                 }
-                        ),
-                        ", "
+                        )
                 ));
             }
         };

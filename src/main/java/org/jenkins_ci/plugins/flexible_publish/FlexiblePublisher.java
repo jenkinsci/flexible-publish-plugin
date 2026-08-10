@@ -49,7 +49,6 @@ import jenkins.model.DependencyDeclarer;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
-import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
@@ -324,7 +323,7 @@ public class FlexiblePublisher extends Recorder implements DependencyDeclarer, M
         if(buildStepList.size() == 1) {
             return getBuildStepShortName(buildStepList.get(0));
         }
-        return String.format("[%s]", StringUtils.join(
+        return String.format("[%s]", String.join(", ",
                 Lists.transform(
                         buildStepList,
                         new Function<BuildStep, String>() {
@@ -333,8 +332,7 @@ public class FlexiblePublisher extends Recorder implements DependencyDeclarer, M
                                 return (input != null) ? getBuildStepShortName(input) : "";
                             }
                         }
-                ),
-                ", "
+                )
         ));
     }
 
